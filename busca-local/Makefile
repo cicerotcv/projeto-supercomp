@@ -1,2 +1,2 @@
 main:
-	g++ -Wall -O3 main.cpp -o script
+	g++ -Wall -O3 utils.cpp main.cpp -o script
