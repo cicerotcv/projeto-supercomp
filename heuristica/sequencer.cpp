@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <iostream>
+#include <random>
 #include <vector>
 
 typedef struct Node Node;
