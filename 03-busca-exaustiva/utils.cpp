@@ -75,7 +75,10 @@ void show_result(std::vector<char> s1, std::vector<char> s2,
   std::cout << std::endl;
 }
 
-int calcula_busca_local(char *sa, int length_sa, char *sb, int length_sb) {
+int calcula_busca_local(const std::string sa, const std::string sb) {
+  const int length_sa = sa.length();
+  const int length_sb = sb.length();
+
   Node H[length_sa + 1][length_sb + 1];
 
   for (int i = 0; i <= length_sa; i++) {
@@ -95,7 +98,7 @@ int calcula_busca_local(char *sa, int length_sa, char *sb, int length_sb) {
       left = &(H[i][j - 1]);
       upper_left = &(H[i - 1][j - 1]);
 
-      int diagonal = upper_left->value + compare(sa[i - 1], sb[j - 1]);
+      int diagonal = upper_left->value + compare(sa.at(i - 1), sb.at(j - 1));
       int delecao = upper->value - 1;
       int insercao = left->value - 1;
 
@@ -126,8 +129,8 @@ int calcula_busca_local(char *sa, int length_sa, char *sb, int length_sb) {
   std::vector<char> s2;
 
   while (current.value != 0) {
-    char c1 = sa[current.i - 1];
-    char c2 = sb[current.j - 1];
+    char c1 = sa.at(current.i - 1);
+    char c2 = sb.at(current.j - 1);
 
     char current_char = c1 == '-' || c2 == '-' ? ' ' : c1 == c2 ? '*' : '-';
 

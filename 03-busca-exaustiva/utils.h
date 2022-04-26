@@ -36,6 +36,7 @@ void show_sequence(char sequence[], int sequence_length);
 void show_result(std::vector<char> s1, std::vector<char> s2,
                  std::vector<char> resultado);
 
-int calcula_busca_local(char *sa, int length_sa, char *sb, int length_sb);
+// int calcula_busca_local(char *sa, int length_sa, char *sb, int length_sb);
+int calcula_busca_local(const std::string sa, const std::string sb);
 
 #endif

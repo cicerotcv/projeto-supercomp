@@ -1,4 +1,3 @@
-#include "math.h"
 #include "utils.h"
 
 typedef struct {
@@ -58,17 +57,25 @@ int main() {
 
   // gera todas as subsequências de tamanho 1 até N
   generate_subsequences(&subsequences_n, a);
+
   // gera todas as subsequências de tamanho 1 até M
   generate_subsequences(&subsequences_m, b);
 
-  // exibe as subsequências geradas
-  std::cout << "Sequência:[N " << subsequences_n.size() << "] ";
-  show_all_subsequences(subsequences_n);
-
   std::cout << std::endl;
+  int max_score = 0;
+  for (Sequence sa : subsequences_m) {
+    for (Sequence sb : subsequences_n) {
+      int score = calcula_busca_local(sa.value, sb.value);
+      if (score > max_score) {
+        max_score = score;
+        std::cout << "Best match:|" << sa.value << std::endl
+                  << "           |" << sb.value << std::endl
+                  << std::endl;
+      }
+    }
+  }
 
-  std::cout << "Sequência:[M " << subsequences_m.size() << "] ";
-  show_all_subsequences(subsequences_m);
+  std::cout << "Max score: " << max_score << std::endl;
 
   return 0;
 }
