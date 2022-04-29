@@ -66,14 +66,20 @@ int main() {
   for (int i = 0; i < n; i++) {
     std::cin >> a[i];
   }
-  std::cout << "Sequência 1: ";
-  show_sequence(a, n);
+
+  if (n <= 100) {
+    std::cout << "Sequência 1: ";
+    show_sequence(a, n);
+  }
 
   for (int i = 0; i < m; i++) {
     std::cin >> b[i];
   }
-  std::cout << "Sequência 2: ";
-  show_sequence(b, m);
+
+  if (m <= 100) {
+    std::cout << "Sequência 2: ";
+    show_sequence(b, m);
+  }
 
   Node H[n + 1][m + 1];
 
@@ -122,16 +128,16 @@ int main() {
 
   // std::cout << std::endl;
 
-  for (int row = 0; row <= n; row++) {
-    // std::cout << "[" << row << "]\t";
+  // for (int row = 0; row <= n; row++) {
+  //   // std::cout << "[" << row << "]\t";
 
-    for (int col = 0; col <= m; col++) {
-      Node current = H[row][col];
-      std::cout << current.value << ' ';
-    }
+  //   for (int col = 0; col <= m; col++) {
+  //     Node current = H[row][col];
+  //     std::cout << current.value << ' ';
+  //   }
 
-    std::cout << std::endl;
-  }
+  //   std::cout << std::endl;
+  // }
 
   // std::cout << std::endl;
   std::cout << std::endl

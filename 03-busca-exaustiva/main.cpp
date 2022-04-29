@@ -1,35 +1,31 @@
 #include "utils.h"
 
 typedef struct {
-  int length;
-  std::string value;
-} Sequence;
+  int score;
+  std::string seq1;
+  std::string seq2;
+} Result;
 
-int get_length(char *string) {
-  int length = 0;
-  while (string[length] != '\0' && length < 10000) {
-    length++;
+int same_size(std::string sa, std::string sb) {
+  if (sa.size() == sb.size()) {
+    return simple_score(sa, sb);
   }
-  return length;
+  return 0;
 }
 
-void generate_subsequences(std::vector<Sequence> *destination,
-                           std::string sequence) {
-  const int N = sequence.length();
-  for (int length = 1; length <= N; length++) {
-    for (int pos = 0; pos <= N - length; pos++) {
-      std::string value(sequence.substr(pos, length));
-      Sequence sequence = {length, value};
-      destination->push_back(sequence);
+void calculate_score(std::vector<Sequence> set_a, std::vector<Sequence> set_b,
+                     int (*method)(std::string sa, std::string sb),
+                     Result* result) {
+  for (Sequence sa : set_a) {
+    for (Sequence sb : set_b) {
+      int score = method(sa.value, sb.value);
+      if (score > result->score) {
+        result->score = score;
+        result->seq1 = sa.value;
+        result->seq2 = sb.value;
+      }
     }
   }
-}
-
-void show_all_subsequences(const std::vector<Sequence> vector) {
-  for (Sequence s : vector) {
-    std::cout << "[" << s.value << "] ";
-  }
-  std::cout << std::endl;
 }
 
 int main() {
@@ -49,33 +45,40 @@ int main() {
   std::cin >> a;
   std::cin >> b;
 
-  std::cout << "a: " << a << std::endl;
-  std::cout << "b: " << b << std::endl;
-
-  std::vector<Sequence> subsequences_n;
-  std::vector<Sequence> subsequences_m;
-
-  // gera todas as subsequências de tamanho 1 até N
-  generate_subsequences(&subsequences_n, a);
-
-  // gera todas as subsequências de tamanho 1 até M
-  generate_subsequences(&subsequences_m, b);
-
-  std::cout << std::endl;
-  int max_score = 0;
-  for (Sequence sa : subsequences_m) {
-    for (Sequence sb : subsequences_n) {
-      int score = calcula_busca_local(sa.value, sb.value);
-      if (score > max_score) {
-        max_score = score;
-        std::cout << "Best match:|" << sa.value << std::endl
-                  << "           |" << sb.value << std::endl
-                  << std::endl;
-      }
-    }
+  if (max(M, N) <= 100) {
+    std::cout << "a: " << a << std::endl;
+    std::cout << "b: " << b << std::endl;
   }
 
-  std::cout << "Max score: " << max_score << std::endl;
+  std::vector<Sequence> sn;
+  std::vector<Sequence> sm;
+
+  // gera todas as subsequências de tamanho 1 até N
+  generate_subsequences(&sn, a);
+
+  // gera todas as subsequências de tamanho 1 até M
+  generate_subsequences(&sm, b);
+
+  Result first_method = {0};
+  Result second_method = {0};
+
+  // Heurística de Alinhamento Local
+  calculate_score(sm, sn, calcula_busca_local, &first_method);
+
+  // Comparação Simples
+  calculate_score(sm, sn, same_size, &second_method);
+
+  Result* result;
+  if (first_method.score > second_method.score) {
+    result = &first_method;
+  } else {
+    result = &second_method;
+  }
+
+  std::cout << "Max score: " << result->score << std::endl;
+  std::cout << "Sequences: " << std::endl
+            << "\t" << result->seq1 << std::endl
+            << "\t" << result->seq2 << std::endl;
 
   return 0;
 }

@@ -16,8 +16,10 @@ int main() {
   std::cin >> a;
   std::cin >> b;
 
-  std::cout << "a: " << a << std::endl;
-  std::cout << "b: " << b << std::endl;
+  if (max(M, N) <= 100) {
+    std::cout << "a: " << a << std::endl;
+    std::cout << "b: " << b << std::endl;
+  }
 
   int k = random_integer(1, min(M, N));
   std::cout << "k: " << k << std::endl;

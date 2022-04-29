@@ -7,12 +7,9 @@ def main():
         raise Exception("You must provide 'n' and 'm'")
     n = int(argv[1])
     m = int(argv[2])
+    file = f"entradas/{str(n).zfill(4)}x{str(m).zfill(4)}.seq"
 
-    # n = 10 # tamanho da primeira sequência
-    # m = 20 # tamanho da segunda sequência
-
-
-    file = 'dna.seq' # nome do arquivo a ser gerado
+    # file = 'dna.seq' # nome do arquivo a ser gerado
 
     f = open(file, 'w')
 

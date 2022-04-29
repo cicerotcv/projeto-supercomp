@@ -146,3 +146,24 @@ int calcula_busca_local(const std::string sa, const std::string sb) {
 
   return max.value;
 }
+
+void generate_subsequences(std::vector<Sequence> *destination,
+                           std::string sequence) {
+  const int N = sequence.length();
+  for (int length = 1; length <= N; length++) {
+    for (int pos = 0; pos <= N - length; pos++) {
+      std::string value(sequence.substr(pos, length));
+      Sequence sequence = {length, value};
+      destination->push_back(sequence);
+    }
+  }
+}
+
+int simple_score(std::string s1, std::string s2) {
+  int score = 0;
+  int limit = min(s1.size(), s2.size());
+  for (int pos = 0; pos < limit; pos++) {
+    score += compare(s1.at(pos), s2.at(pos));
+  }
+  return score;
+}
