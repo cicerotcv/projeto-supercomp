@@ -55,27 +55,27 @@ int calcula_busca_local(const std::string sa, const std::string sb) {
     }
   }
 
-  current = max;
+  // current = max;
 
-  std::vector<char> s1;
-  std::vector<char> resultado;
-  std::vector<char> s2;
+  // std::vector<char> s1;
+  // std::vector<char> resultado;
+  // std::vector<char> s2;
 
-  while (current.value != 0) {
-    char c1 = sa.at(current.i - 1);
-    char c2 = sb.at(current.j - 1);
+  // while (current.value != 0) {
+  //   char c1 = sa.at(current.i - 1);
+  //   char c2 = sb.at(current.j - 1);
 
-    char current_char = c1 == '-' || c2 == '-' ? ' ' : c1 == c2 ? '*' : '-';
+  //   char current_char = c1 == '-' || c2 == '-' ? ' ' : c1 == c2 ? '*' : '-';
 
-    c1 = current.previous->i == current.i ? '-' : c1;
-    c2 = current.previous->j == current.j ? '-' : c2;
+  //   c1 = current.previous->i == current.i ? '-' : c1;
+  //   c2 = current.previous->j == current.j ? '-' : c2;
 
-    s1.push_back(c1);
-    resultado.push_back(current_char);
-    s2.push_back(c2);
+  //   s1.push_back(c1);
+  //   resultado.push_back(current_char);
+  //   s2.push_back(c2);
 
-    current = *current.previous;
-  }
+  //   current = *current.previous;
+  // }
 
   return max.value;
 }
@@ -119,11 +119,11 @@ void run() {
 
   std::cin >> N;
   std::cin >> M;
-  std::cout << "N: " << N << ", M: " << M << std::endl;
-  std::cout << "WMAT: " << WMAT << std::endl;
-  std::cout << "WMIS: " << WMIS << std::endl;
-  std::cout << "WGAP: " << WGAP << std::endl;
   std::cout << std::endl;
+  std::cout << "N: " << N << ", M: " << M << std::endl;
+  // std::cout << "WMAT: " << WMAT << std::endl;
+  // std::cout << "WMIS: " << WMIS << std::endl;
+  // std::cout << "WGAP: " << WGAP << std::endl;
 
   std::string a;
   std::string b;
@@ -131,10 +131,10 @@ void run() {
   std::cin >> a;
   std::cin >> b;
 
-  if (max(M, N) <= 100) {
-    std::cout << "a: " << a << std::endl;
-    std::cout << "b: " << b << std::endl;
-  }
+  // if (max(M, N) <= 100) {
+  //   std::cout << "a: " << a << std::endl;
+  //   std::cout << "b: " << b << std::endl;
+  // }
 
   std::vector<Sequence> sn;
   std::vector<Sequence> sm;
@@ -162,9 +162,9 @@ void run() {
   }
 
   std::cout << "Max score: " << result->score << std::endl;
-  std::cout << "Sequences: " << std::endl
-            << "\t" << result->seq1 << std::endl
-            << "\t" << result->seq2 << std::endl;
+  // std::cout << "Sequences: " << std::endl
+  //           << "\t" << result->seq1 << std::endl
+  //           << "\t" << result->seq2 << std::endl;
 }
 
 int main() {

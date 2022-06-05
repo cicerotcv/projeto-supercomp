@@ -4,7 +4,7 @@ import time
 import random
 
 def generate_input(n, m):
-    file = f"entradas/{str(n).zfill(4)}x{str(m).zfill(4)}.seq"
+    file = f"./entradas/{str(n).zfill(4)}x{str(m).zfill(4)}.seq"
 
     f = open(file, 'w')
 

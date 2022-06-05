@@ -55,27 +55,27 @@ int calcula_busca_local(const std::string sa, const std::string sb) {
     }
   }
 
-  current = max;
+  // current = max;
 
-  std::vector<char> s1;
-  std::vector<char> resultado;
-  std::vector<char> s2;
+  // std::vector<char> s1;
+  // std::vector<char> resultado;
+  // std::vector<char> s2;
 
-  while (current.value != 0) {
-    char c1 = sa.at(current.i - 1);
-    char c2 = sb.at(current.j - 1);
+  // while (current.value != 0) {
+  //   char c1 = sa.at(current.i - 1);
+  //   char c2 = sb.at(current.j - 1);
 
-    char current_char = c1 == '-' || c2 == '-' ? ' ' : c1 == c2 ? '*' : '-';
+  //   char current_char = c1 == '-' || c2 == '-' ? ' ' : c1 == c2 ? '*' : '-';
 
-    c1 = current.previous->i == current.i ? '-' : c1;
-    c2 = current.previous->j == current.j ? '-' : c2;
+  //   c1 = current.previous->i == current.i ? '-' : c1;
+  //   c2 = current.previous->j == current.j ? '-' : c2;
 
-    s1.push_back(c1);
-    resultado.push_back(current_char);
-    s2.push_back(c2);
+  //   s1.push_back(c1);
+  //   resultado.push_back(current_char);
+  //   s2.push_back(c2);
 
-    current = *current.previous;
-  }
+  //   current = *current.previous;
+  // }
 
   return max.value;
 }
@@ -109,11 +109,13 @@ void calculate_score(std::vector<Sequence> set_a, std::vector<Sequence> set_b,
 void generate_subsequences(std::vector<Sequence>* destination,
                            std::string sequence) {
   const int N = sequence.length();
+#pragma omp parallel for
   for (int length = 1; length <= N; length++) {
     for (int pos = 0; pos <= N - length; pos++) {
       std::string value(sequence.substr(pos, length));
       Sequence sequence = {length, value};
-      destination->push_back(sequence);
+#pragma omp critical
+      { destination->push_back(sequence); }
     }
   }
 }
@@ -123,11 +125,11 @@ void run() {
 
   std::cin >> N;
   std::cin >> M;
-  std::cout << "N: " << N << ", M: " << M << std::endl;
-  std::cout << "WMAT: " << WMAT << std::endl;
-  std::cout << "WMIS: " << WMIS << std::endl;
-  std::cout << "WGAP: " << WGAP << std::endl;
   std::cout << std::endl;
+  std::cout << "N: " << N << ", M: " << M << std::endl;
+  // std::cout << "WMAT: " << WMAT << std::endl;
+  // std::cout << "WMIS: " << WMIS << std::endl;
+  // std::cout << "WGAP: " << WGAP << std::endl;
 
   std::string a;
   std::string b;
@@ -135,21 +137,30 @@ void run() {
   std::cin >> a;
   std::cin >> b;
 
-  if (max(M, N) <= 100) {
-    std::cout << "a: " << a << std::endl;
-    std::cout << "b: " << b << std::endl;
-  }
+  // if (max(M, N) <= 100) {
+  //   std::cout << "a: " << a << std::endl;
+  //   std::cout << "b: " << b << std::endl;
+  // }
 
   std::vector<Sequence> sn;
   std::vector<Sequence> sm;
 
-  // gera todas as subsequências de tamanho 1 até N
-  { generate_subsequences(&sn, a); }
+  sn.reserve((N * (N + 1)) / 2);
+  sm.reserve((M * (M + 1)) / 2);
 
-  // gera todas as subsequências de tamanho 1 até M
-  { generate_subsequences(&sm, b); }
+#pragma omp parallel
+  {
+#pragma omp master
+    {
+// gera todas as subsequências de tamanho 1 até N
+#pragma omp task
+      generate_subsequences(&sn, a);
 
-  // std::cout << "Num. Threads: " << omp_get_num_threads() << std::endl;
+// gera todas as subsequências de tamanho 1 até M
+#pragma omp task
+      generate_subsequences(&sm, b);
+    }
+  }
 
   Result first_method = {0};
   Result second_method = {0};
@@ -169,9 +180,9 @@ void run() {
   }
 
   std::cout << "Max score: " << result->score << std::endl;
-  std::cout << "Sequences: " << std::endl
-            << "\t" << result->seq1 << std::endl
-            << "\t" << result->seq2 << std::endl;
+  // std::cout << "Sequences: " << std::endl
+  //           << "\t" << result->seq1 << std::endl
+  //           << "\t" << result->seq2 << std::endl;
 }
 
 int main() {
