@@ -151,8 +151,8 @@ void run() {
       // AE   AF   AG   BE   BF   BG   CE   CF   CF   DE   DF   DG
       // 0x0  0x1  0x2  1x0  1x1  1x2  2x0  2x1  2x2  3x0  3x1  3x2
       // 0    1    2    3    4    5    6    7    8    9    10   11
-      // (index // 4) x (index % 3)
-      int indexA = (int) index / SA.size();
+      // (index // 3) x (index % 3)
+      int indexA = (int) index / SB.size();
       int indexB = (int) index % SB.size();
 
       std::string ssA = SA.at(indexA);
