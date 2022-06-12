@@ -158,6 +158,8 @@ void run() {
       std::string ssA = SA.at(indexA);
       std::string ssB = SB.at(indexB);
 
+      // if (ssA.length() != ssB.length()) continue; // compare only same size sequences
+
       int local_score = subsequences_score(ssA, ssB);
 
       if (local_score > max_score) {
