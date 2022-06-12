@@ -109,8 +109,8 @@ void run() {
   std::vector<std::string> SA;
   std::vector<std::string> SB;
 
-  SA.resize((N * (N + 1)) / 2);
-  SB.resize((M * (M + 1)) / 2);
+  SA.reserve((N * (N + 1)) / 2);
+  SB.reserve((M * (M + 1)) / 2);
 
   #pragma omp parallel // 1e-05 s
   {
@@ -151,11 +151,14 @@ void run() {
       // AE   AF   AG   BE   BF   BG   CE   CF   CF   DE   DF   DG
       // 0x0  0x1  0x2  1x0  1x1  1x2  2x0  2x1  2x2  3x0  3x1  3x2
       // 0    1    2    3    4    5    6    7    8    9    10   11
-      // (index % 4) x (index % 3)
-      int indexA = (int) index % SA.size();
+      // (index // 4) x (index % 3)
+      int indexA = (int) index / SA.size();
       int indexB = (int) index % SB.size();
 
-      int local_score = subsequences_score(SA.at(indexA), SB.at(indexB));
+      std::string ssA = SA.at(indexA);
+      std::string ssB = SB.at(indexB);
+
+      int local_score = subsequences_score(ssA, ssB);
 
       if (local_score > max_score) {
         max_score = local_score;
