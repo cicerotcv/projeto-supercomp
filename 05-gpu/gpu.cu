@@ -1,5 +1,6 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
+#include <omp.h>
 
 #include <iostream>
 
@@ -11,151 +12,79 @@ typedef struct {
   std::string seq2;
 } Result;
 
+typedef struct {
+  int start;
+  int length;
+} Subsequence;
+
 // https://stackoverflow.com/a/1088299
 // << operator to "print" vectors as string sequence
 std::ostream& operator<<(std::ostream& os, const thrust::device_vector<char> vector) {
-  for (int i = 0; i < vector.size(); i++) {
-    os << vector[i];
+  for (auto el : vector) {
+    os << el;
   }
   return os;
 }
 
-int calcula_busca_local(const std::string sa, const std::string sb) {
-  const int length_sa = sa.length();
-  const int length_sb = sb.length();
-
-  Node H[length_sa + 1][length_sb + 1];
-
-  for (int i = 0; i <= length_sa; i++) {
-    H[i][0] = {0, i, 0};
-  }
-
-  for (int j = 0; j <= length_sb; j++) {
-    H[0][j] = {0, 0, j};
-  }
-
-  Node max = {0, 0, 0};
-  Node current, *upper, *left, *upper_left;
-
-  for (int i = 1; i <= length_sa; i++) {
-    for (int j = 1; j <= length_sb; j++) {
-      upper = &(H[i - 1][j]);
-      left = &(H[i][j - 1]);
-      upper_left = &(H[i - 1][j - 1]);
-
-      int diagonal = upper_left->value + compare(sa.at(i - 1), sb.at(j - 1));
-      int delecao = upper->value - 1;
-      int insercao = left->value - 1;
-
-      int current_value = maximo(diagonal, delecao, insercao);
-
-      current = {current_value, i, j};
-
-      if (current_value == diagonal) {
-        current.previous = upper_left;
-      } else if (current.value == delecao) {
-        current.previous = upper;
-      } else if (current.value == insercao) {
-        current.previous = left;
-      }
-
-      H[i][j] = current;
-
-      if (current.value >= max.value) {
-        max = current;
-      }
-    }
-  }
-  return max.value;
+std::string get_subsequence(std::string String, int start, int length) {
+  return String.substr(start, length);
 }
 
-int same_size(std::string sa, std::string sb) {
-  if (sa.size() == sb.size()) {
-    return simple_score(sa, sb);
-  }
-  return 0;
-}
+struct Compute {
+  thrust::device_ptr<char> dS;
+  thrust::device_ptr<int> previous_row;
+  char chr;
 
-void calculate_score(std::vector<Sequence> set_a, std::vector<Sequence> set_b,
-                     int (*method)(std::string sa, std::string sb),
-                     Result* result) {
-  for (Sequence sa : set_a) {
-    for (Sequence sb : set_b) {
-      int score = method(sa.value, sb.value);
-      if (score > result->score) {
-        result->score = score;
-        result->seq1 = sa.value;
-        result->seq2 = sb.value;
-      }
-    }
-  }
-}
+  Compute(thrust::device_ptr<char> _dS, char _chr,  thrust::device_ptr<int> _previous_row)
+      : dS(_dS), chr(_chr), previous_row(_previous_row){};
 
-// struct subsequence {
-//   typedef std::string::iterator iterator;
-//   __host__ __device__ int operator()(const iterator &begin , const iterator&
-//   end) { return 0; }
-// };
+  __host__ __device__ int operator()(const int(&i)) {
+    // ...(i-1,j-1) ( i , j-1) (i+1,j-1)
+    // ...(i-1, j ) ( i ,  j ) (i+1, j )
 
-// void generate_subsequences(std::vector<Sequence>* destination, std::string
-// sequence) {
-//   const int N = sequence.length();
+    int score;
+    char comparing_char = dS[i];
 
-//   for (int length = 1; length <= N; length++) {
-//     for (int pos = 0; pos <= N - length; pos++) {
-//       std::string value(sequence.substr(pos, length));
-//       Sequence sequence = {length, value};
-//       destination->push_back(sequence);
-//     }
-//   }
-// }
-// void generate_subsequences(std::vector<Sequence>* destination, std::string
-// sequence) {
-//   const int N = sequence.length();
-//   for (int length = 1; length <= N; length++) {
-//     for (int pos = 0; pos <= N - length; pos++) {
-//       std::string value(sequence.substr(pos, length));
-//       Sequence sequence = {length, value};
-//       destination->push_back(sequence);
-//     }
-//   }
-// }
+    if (chr == comparing_char)
+      score = previous_row[i - 1] + WMAT;
+    else if (chr == '-' || comparing_char == '-')
+      score = previous_row[i - 1] + WGAP;
+    else
+      score = previous_row[i - 1] + WMIS;
 
-thrust::device_vector<char> get_subsequence(
-    const thrust::device_vector<char>& sequence, int start, int size) {
-  return thrust::device_vector<char>(sequence.begin() + start,
-                                     sequence.begin() + start + size);
-}
-
-// int calculate_score(const thrust::device_vector<char> &sequence1, const
-// thrust::device_vector<char> &sequence2) {
-//   int max = std::max(sequence1.size(), sequence2.size());
-
-//   thrust::device_vector<thrust::device_vector<char>> kernel;
-
-//   thrust::counting_iterator<int> i(1);
-//   thrust::counting_iterator<int> j(max + 1);
-
-// }
-
-struct S_temp {
-  const thrust::device_vector<char> SN;
-  const thrust::device_vector<char> SM;
-
-  // construtor
-  S_temp(const thrust::device_vector<char> _SN,
-         const thrust::device_vector<char> _SM)
-      : SN(_SN), SM(_SM) {}
-
-  __host__ __device__ int operator()(const int i, const int j) {
-    char a, b;
-    a = SN[i];
-    b = SM[j];
-    if (a == b) return WMAT;
-    if (a == '-' || b == '-') return WGAP;
-    return WMIS;
+    return score > 0 ? score : 0;
   }
 };
+
+int subsequences_score(const std::string ssA, const std::string ssB){
+  const int N = ssA.size();
+  const int M = ssB.size();
+
+  // std::cout << ssA << " x " << ssB << std::endl;
+
+  thrust::device_vector<int> previous_row(N + 1);
+  thrust::device_vector<int> current_row(N + 1);
+
+  previous_row.resize(N + 1);
+  current_row.resize(N + 1);
+
+  thrust::fill(previous_row.begin(), previous_row.end(), 0);
+
+  thrust::device_vector<char> dS(N);
+  thrust::copy(ssA.begin(), ssA.begin() + N, dS.begin());
+
+  thrust::counting_iterator<int> c0(1);
+  thrust::counting_iterator<int> c1(M + 1);
+
+  for (int i = 0; i < M; i++) {
+    char comparing_char = ssB[i];
+    thrust::transform(c0, c1, current_row.begin() + 1, Compute(dS.data(), comparing_char, previous_row.data()));
+    thrust::inclusive_scan(current_row.begin() + 1, current_row.end(), previous_row.begin() + 1, thrust::maximum<int>());
+  }
+
+  return thrust::reduce(current_row.begin() + 1, current_row.end(), -1, thrust::maximum<int>());
+}
+
 
 void run() {
   int N, M;
@@ -165,81 +94,83 @@ void run() {
   std::cout << std::endl;
   std::cout << "N: " << N << ", M: " << M << std::endl;
 
-  std::string a;
-  std::string b;
+  double before, after;
 
-  std::cin >> a;
-  std::cin >> b;
 
-  thrust::device_vector<char> gpu_a(a.begin(), a.end());  // string::sequencia 1
-  thrust::device_vector<char> gpu_b(b.begin(), b.end());  // string::sequencia 2
-  thrust::device_vector<char> score;                      // int::score
+  std::string A;
+  std::string B;
 
-  std::cout << gpu_a << std::endl;
-  std::cout << gpu_b << std::endl;
+  std::cin >> A;
+  std::cin >> B;
 
-  // S_temp s_temp(gpu_a, gpu_b);
+  std::cout << "A: " << A << std::endl;
+  std::cout << "B: " << B << std::endl;
 
-  // thrust::device_vector<int> previous_row;
-  // thrust::fill(previous_row.begin(), previous_row.end(), 0);
+  std::vector<std::string> SA;
+  std::vector<std::string> SB;
 
-  // thrust::device_vector<int> current_row;
+  SA.resize((N * (N + 1)) / 2);
+  SB.resize((M * (M + 1)) / 2);
 
-  // thrust::transform(gpu_a.begin(), gpu_a.end(), gpu_b.begin(), gpu_b.end(),
-  // score.begin(), compare);
+  #pragma omp parallel // 1e-05 s
+  {
+    #pragma omp master
+    {
+      before = omp_get_wtime();
 
-  // thrust::transform(current_row.begin(), current_row.back(),
-  // previous_row.begin(), previous_row.end(), s_temp());
+      #pragma omp task shared(SA)
+      for (int length = 1; length <= N; length++) {
+        for (int start = 0; start < N - length + 1; start++) {
+          SA.push_back(get_subsequence(A, start, length));
+        }
+      }
 
-  // for (int i = 0; i < N; i++) {
-  // kernel.push_back(row);
-  // }
+      #pragma omp task shared(SB)
+      for (int length = 1; length <= M; length++) {
+        for (int start = 0; start < M - length + 1; start++) {
+          SB.push_back(get_subsequence(B, start, length));
+        }
+      }
+      
+      #pragma omp taskwait
+      {
+        after = omp_get_wtime();
+        std::cout << "Time to generate all subsequences: " << after - before << " s" <<std::endl;
+      }
+    }
+  } 
 
-  // std::cout << kernel.size() << std::endl;
+  int max_score = 0;
 
-  // thrust::device_vector<char> my_string = get_subsequence(gpu_a, 0, 2);
+  #pragma omp parallel shared(max_score)
+  {
+    #pragma omp for reduction(max : max_score)
+    for (int index = 0; index < SA.size() * SB.size(); index++) {
+      // A B C D  -> 4
+      // E F G    -> 3  -> 12 combinações
+      // AE   AF   AG   BE   BF   BG   CE   CF   CF   DE   DF   DG
+      // 0x0  0x1  0x2  1x0  1x1  1x2  2x0  2x1  2x2  3x0  3x1  3x2
+      // 0    1    2    3    4    5    6    7    8    9    10   11
+      // (index % 4) x (index % 3)
+      int indexA = (int) index % SA.size();
+      int indexB = (int) index % SB.size();
 
-  // for (char chr : my_string) {
-  //   std::cout << chr << std::endl;
-  // }
+      int local_score = subsequences_score(SA.at(indexA), SB.at(indexB));
 
-  // for (int i = 0; i < gpu)
+      if (local_score > max_score) {
+        max_score = local_score;
+      }
+    }
+  }
 
-  // thrust::device_vector<Sequence> sn;
-  // thrust::device_vector<Sequence> sm;
-
-  // // gera todas as subsequências de tamanho 1 até N
-  // generate_subsequences(&sn, a);
-
-  // // gera todas as subsequências de tamanho 1 até M
-  // generate_subsequences(&sm, b);
-
-  // Result first_method = {0};
-  // Result second_method = {0};
-
-  // // // Heurística de Alinhamento Local
-  // calculate_score(sm, sn, calcula_busca_local, &first_method);
-
-  // // Comparação Simples
-  // calculate_score(sm, sn, same_size, &second_method);
-
-  // Result* result;
-  // if (first_method.score > second_method.score) {
-  //   result = &first_method;
-  // } else {
-  //   result = &second_method;
-  // }
-
-  // std::cout << "Max score: " << result->score << std::endl;
+  std::cout << "Max Score: " << max_score << std::endl;
 }
 
 int main() {
-  clock_t before = std::clock();
+  double before = omp_get_wtime();
   run();
-  clock_t after = std::clock();
+  double after = omp_get_wtime();
 
-  double delta_time = (double)(after - before) / CLOCKS_PER_SEC;
-
-  std::cout << "Elapsed time: " << delta_time << std::endl;
+  std::cout << "Elapsed time: " <<  after - before << std::endl;
   return 0;
 }
