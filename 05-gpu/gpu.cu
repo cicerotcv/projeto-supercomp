@@ -4,7 +4,10 @@
 
 #include <iostream>
 
-#include "utils.h"
+#define WMAT 2
+#define WMIS (-1)
+#define WGAP (-1)
+#define null NULL
 
 typedef struct {
   int score;
